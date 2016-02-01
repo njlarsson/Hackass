@@ -1,5 +1,9 @@
 grammar Hackass;
 
+@header {
+package hackass.grammar;
+}
+
 file
 : line+
 ;
@@ -24,7 +28,11 @@ ainstr
 ;
 
 cinstr
-: (AMD+ '=')? comp (';' jump)?
+: (dest '=')? comp (';' jump)?
+;
+
+dest
+: AMD+
 ;
 
 jump

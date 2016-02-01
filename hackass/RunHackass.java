@@ -1,4 +1,8 @@
+package hackass;
+
+import hackass.grammar.*;
 import java.io.*;
+import java.util.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
@@ -12,7 +16,9 @@ public class RunHackass {
         HackassParser parser = new HackassParser(tokens);
         ParseTree tree = parser.file();
         ParseTreeWalker walker = new ParseTreeWalker();
-        walker.walk(new Assembler(infnam, outfnam), tree);
-        System.out.println();
+
+        HashMap<String, Integer> symtab = new HashMap<String, Integer>();        
+        walker.walk(new Pass1(infnam, symtab), tree);
+        walker.walk(new Pass2(infnam, outfnam, symtab), tree);
     }
 }

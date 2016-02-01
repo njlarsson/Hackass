@@ -103,7 +103,6 @@ public class Pass2 extends Assembler {
         }
         write(binstr);          // write "0" + a in binary
         write("\n");
-        System.out.println(a);
     }
 
     @Override
@@ -116,7 +115,6 @@ public class Pass2 extends Assembler {
     @Override
     public void exitCinstr(HackassParser.CinstrContext ctx) {
         int c = 0b1110000000000000 | comp << 6 | dest << 3 | jump;
-        System.out.println(comp + " " + dest + " " + jump);
         write(Integer.toBinaryString(c));
         write("\n");
     }

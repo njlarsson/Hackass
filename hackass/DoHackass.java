@@ -6,7 +6,7 @@ import java.util.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
-public class RunHackass {
+public class DoHackass {
     public static void main(String[] args) throws IOException {
         String infnam = args[0];
         String outfnam = args[1];

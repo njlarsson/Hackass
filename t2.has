@@ -1,0 +1,26 @@
+       var i
+       var sum
+       var loop
+       
+       @i
+       M=1    // i=1
+       @sum
+       M=0    // sum=0
+loop:
+       @i
+       D=M    // D=i
+       @100
+       D=D-A  // D=i-100
+       @end
+       D;JGT  // If (i-100)>0 goto end
+       @i
+       D=M    // D=i
+       @sum
+       M=D+M  // sum=sum+i
+       @i
+       M=M+1  // i=i+1
+       @loop
+       0;JMP  // Goto loop
+end:
+       @18
+       0;JMP  // Infinite loop

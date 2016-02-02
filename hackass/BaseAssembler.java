@@ -6,11 +6,11 @@ import java.util.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
-abstract class Assembler extends HackassBaseListener {
+abstract class BaseAssembler extends HackassBaseListener {
     private final String infnam;
     private final HashMap<String, Integer> symtab;
     
-    Assembler(String infnam, HashMap<String, Integer> symtab) throws IOException {
+    BaseAssembler(String infnam, HashMap<String, Integer> symtab) throws IOException {
         this.infnam = infnam;
         this.symtab = symtab;
     }

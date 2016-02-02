@@ -6,7 +6,7 @@ import java.util.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
-public class Pass1 extends Assembler {
+public class Pass1 extends BaseAssembler {
     private int curCodeAddr = 0;
 
     Pass1(String infnam, HashMap<String, Integer> symtab) throws IOException {

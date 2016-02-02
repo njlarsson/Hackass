@@ -6,11 +6,23 @@ import java.util.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 
-public class Pass2 extends BaseAssembler {
+/**
+ * One-pass assembler that replaces BaseAssembler, Pass1, and Pass2 by
+ * combining everything they do.
+ */
+public class OnePassAssembler extends HackassBaseListener {
     // Encapsulates IOException, to throw from overridden methods.
     static class IORuntimeException extends RuntimeException {
         final IOException iox;
         IORuntimeException(IOException iox) { this.iox = iox; }
+    }
+
+    private static class VarDecl {
+        boolean defined = false;
+        int addr = 0;
+
+        // Where it's used before defined.
+        ArrayList<Integer> forward = new ArrayList<Integer>();
     }
 
     private static final HashMap<String, Integer> jumpCodes = new HashMap<String, Integer>();
@@ -57,15 +69,66 @@ public class Pass2 extends BaseAssembler {
     }
 
     private final Writer out;
+    private final String infnam;
+    private final HashMap<String, VarDecl> symtab = new HashMap<String, VarDecl>();
+    private final ArrayList<Integer> codeBuffer = new ArrayList<Integer>();
     
     private int curVarAddr = varBase;
     private int dest, comp, jump;
 
-    Pass2(String infnam, String outfnam, HashMap<String, Integer> symtab) throws IOException {
-        super(infnam, symtab);
+    OnePassAssembler(String infnam, String outfnam) throws IOException {
+        this.infnam = infnam;
         out = new OutputStreamWriter(new FileOutputStream(outfnam), "US-ASCII");
     }
 
+    // ------- Begin methods corresponding to BaseAssembler --------
+    protected void error(int line, String msg) {
+    }
+    
+    protected void defSym(Token tok, int a) {
+        String sym = tok.getText();
+        VarDecl v = symtab.get(sym);
+        if (v != null) {
+            if (v.defined) {
+                error(tok.getLine(), "redefined " + sym);
+            } else {
+                v.defined = true;
+                v.addr = a;
+                for (int p : v.forward) {
+                    codeBuffer.set(p, a);
+                }
+            }
+        } else {
+            v = new VarDecl();
+            v.defined = true;
+            v.addr = a;
+            symtab.put(sym, v);
+        }
+    }
+
+    protected int getSym(Token tok) {
+        String sym = tok.getText();
+        VarDecl v = symtab.get(sym);
+        if (v == null) {
+            v = new VarDecl();
+            symtab.put(sym, v);
+        }
+        if (!v.defined) {
+            // Remember to set later.
+            v.forward.add(codeBuffer.size());
+        }
+        return v.addr;
+    }
+    // -------- End methods corresponding to BaseAssembler ---------
+
+    // ----------- Begin methods corresponding to Pass1 ------------
+    @Override
+    public void enterLabel(HackassParser.LabelContext ctx) {
+        defSym(ctx.ID().getSymbol(), codeBuffer.size());
+    }
+    // ------------ End methods corresponding to Pass1 -------------
+
+    // ----------- Begin methods corresponding to Pass2 ------------
     private void write(String s) {
         try {
             out.write(s);
@@ -76,7 +139,21 @@ public class Pass2 extends BaseAssembler {
 
     @Override
     public void exitFile(HackassParser.FileContext ctx) {
+        for (Map.Entry<String, VarDecl> e : symtab.entrySet()) {
+            VarDecl v = e.getValue();
+            if (!v.defined) {
+                error(v.forward.get(0), "Symbol missing definition: " + e.getKey());
+            }
+        }
         try {
+            for (int i : codeBuffer) {
+                String binstr = Integer.toBinaryString(i);
+                for (int j = binstr.length(); j < 16; j++) {
+                    write("0");         // pad with initial zeros
+                }
+                write(binstr);
+                write("\n");
+            }
             out.close();
         } catch (IOException iox) {
             throw new IORuntimeException(iox);
@@ -97,12 +174,7 @@ public class Pass2 extends BaseAssembler {
             TerminalNode node = ctx.ZERONE() != null ? ctx.ZERONE() : ctx.INT();
             a = Integer.parseInt(node.getText());
         }
-        String binstr = Integer.toBinaryString(a);
-        for (int i = binstr.length(); i < 16; i++) {
-            write("0");         // pad with initial zeros
-        }
-        write(binstr);          // write "0" + a in binary
-        write("\n");
+        codeBuffer.add(a);
     }
 
     @Override
@@ -115,8 +187,7 @@ public class Pass2 extends BaseAssembler {
     @Override
     public void exitCinstr(HackassParser.CinstrContext ctx) {
         int c = 0b1110000000000000 | comp << 6 | dest << 3 | jump;
-        write(Integer.toBinaryString(c));
-        write("\n");
+        codeBuffer.add(c);
     }
     
     @Override
@@ -144,4 +215,5 @@ public class Pass2 extends BaseAssembler {
         }
         jump = i;
     }
+    // ------------ End methods corresponding to Pass2 -------------
 }

@@ -10,7 +10,7 @@ public class DoHackass {
     public static void main(String[] args) throws IOException {
         String infnam = args[0];
         String outfnam = args[1];
-        ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(infnam));
+        CharStream input = CharStreams.fromFileName(infnam);
         HackassLexer lexer = new HackassLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         HackassParser parser = new HackassParser(tokens);

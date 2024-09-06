@@ -7,6 +7,7 @@
 *.dvi
 
 # Object code
+hackass.jar
 *.class
 
 # Don't version-control javadoc for now
@@ -15,6 +16,7 @@ api
 # Antlr outputs
 */grammar/*.java
 *.tokens
+*.interp
 
 # Hackass outputs
 *.hack
